@@ -24,7 +24,7 @@ import { ToolManager } from '../../../tool-calling.js';
 import { renderExtensionTemplateAsync } from '../../../extensions.js';
 import { getSettings, isLorebookEnabled } from './tree-store.js';
 import { preflightToolRuntimeState, registerTools } from './tool-registry.js';
-import { buildNotebookPrompt } from './tools/notebook.js';
+import { buildNotebookPrompt, resetNotebookWriteGuard } from './tools/notebook.js';
 import { bindUIEvents, refreshUI } from './ui-controller.js';
 import { initActivityFeed } from './activity-feed.js';
 import { initCommands } from './commands.js';
@@ -291,10 +291,12 @@ function cleanOrphanedToolInvocations() {
  * Runs before ST assembles the next request, so it can validate TV tool state first.
  */
 async function onGenerationStarted(type, opts, dryRun) {
-    _generationInProgress = true;
-
     // Skip dry runs (ST's token counting passes) — no sidecar calls or heavy work needed.
+    // Do NOT set _generationInProgress on dry runs: they never fire MESSAGE_RECEIVED or
+    // GENERATION_ENDED to clear it, so it would stay true forever and block tool re-registration.
     if (dryRun) return;
+
+    _generationInProgress = true;
 
     // Detect recursive tool-call passes FIRST, before any other work.
     // On recursive passes the last message is a tool_invocations system message
@@ -314,6 +316,9 @@ async function onGenerationStarted(type, opts, dryRun) {
         setExtensionPrompt(TV_PROMPT_KEY, '', extension_prompt_types.IN_CHAT, 0, false, extension_prompt_roles.SYSTEM);
         return;
     }
+
+    // Reset per-generation guards (only on first pass, not recursive)
+    resetNotebookWriteGuard();
 
     const settings = getSettings();
     let runtimeState = null;
