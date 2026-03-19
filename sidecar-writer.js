@@ -23,7 +23,7 @@ import {
     getAllEntryUids,
     getSettings,
 } from './tree-store.js';
-import { getReadableBooks } from './tool-registry.js';
+import { getReadableBooks, checkToolConfirmation, REMEMBER_NAME, UPDATE_NAME, FORGET_NAME, SUMMARIZE_NAME, REORGANIZE_NAME, MERGESPLIT_NAME } from './tool-registry.js';
 import { isSidecarConfigured, sidecarGenerate, getSidecarModelLabel } from './llm-sidecar.js';
 import { getDefinition as getRememberDef } from './tools/remember.js';
 import { getDefinition as getUpdateDef } from './tools/update.js';
@@ -429,8 +429,31 @@ async function executeWriteOps(ops, reasoning = '') {
     const reorganizeAction = getReorganizeDef().action;
     const mergeSplitAction = getMergeSplitDef().action;
 
+    // Map op types to tool names for confirmation checks
+    const OP_TO_TOOL = {
+        remember: REMEMBER_NAME,
+        update: UPDATE_NAME,
+        merge: MERGESPLIT_NAME,
+        split: MERGESPLIT_NAME,
+        summarize: SUMMARIZE_NAME,
+        forget: FORGET_NAME,
+        reorganize: REORGANIZE_NAME,
+    };
+
     for (const op of ops) {
         try {
+            // Check confirmation if the user has it enabled for this tool type
+            const toolName = OP_TO_TOOL[op.type];
+            if (toolName) {
+                const approved = await checkToolConfirmation(toolName, op);
+                if (!approved) {
+                    console.log(`[TunnelVision] Sidecar write denied by user: ${op.type} "${op.title || op.uid || ''}"`)
+                    results.push({ op, success: false, result: 'Denied by user' });
+                    failed++;
+                    continue;
+                }
+            }
+
             let result;
             if (op.type === 'remember') {
                 result = await rememberAction({

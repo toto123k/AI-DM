@@ -617,4 +617,27 @@ export function unregisterTools() {
 }
 
 // Re-export tool names and constants for diagnostics/UI
+/**
+ * Check if a tool requires confirmation and show the popup if so.
+ * Used by the sidecar writer to respect the same confirmation settings as main model tools.
+ * @param {string} toolName - The tool name (e.g. 'TunnelVision_Remember')
+ * @param {Object} args - The tool arguments to display in the popup
+ * @returns {Promise<boolean>} True if approved (or no confirmation needed)
+ */
+export async function checkToolConfirmation(toolName, args) {
+    const settings = getSettings();
+    const confirmTools = settings.confirmTools || {};
+    if (!CONFIRMABLE_TOOLS.has(toolName) || !confirmTools[toolName]) return true;
+
+    const displayNames = {
+        [REMEMBER_NAME]: 'Remember (Sidecar)',
+        [UPDATE_NAME]: 'Update (Sidecar)',
+        [FORGET_NAME]: 'Forget (Sidecar)',
+        [SUMMARIZE_NAME]: 'Summarize (Sidecar)',
+        [REORGANIZE_NAME]: 'Reorganize (Sidecar)',
+        [MERGESPLIT_NAME]: 'Merge/Split (Sidecar)',
+    };
+    return showToolConfirmation(displayNames[toolName] || toolName, args);
+}
+
 export { SEARCH_NAME, REMEMBER_NAME, UPDATE_NAME, FORGET_NAME, REORGANIZE_NAME, SUMMARIZE_NAME, MERGESPLIT_NAME, NOTEBOOK_NAME, ALL_TOOL_NAMES, CONFIRMABLE_TOOLS };
