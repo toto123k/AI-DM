@@ -103,6 +103,13 @@ export function bindUIEvents() {
         $(this).next('.tv-advanced-body').slideToggle(200);
     });
 
+    // Auto-detect pattern
+    $('#tv_auto_detect_pattern').on('input', function () {
+        const settings = getSettings();
+        settings.autoDetectPattern = $(this).val();
+        saveSettingsDebounced();
+    });
+
     // Per-tool toggles
     $(document).on('change', '.tv_tool_enabled', onToolToggle);
 
@@ -244,6 +251,9 @@ export function refreshUI() {
     // Sync collapsed depth
     $('#tv_collapsed_depth').val(settings.collapsedDepth ?? 2);
     $('#tv_collapsed_depth_section').toggle((settings.searchMode || 'traversal') === 'collapsed');
+
+    // Sync auto-detect pattern
+    $('#tv_auto_detect_pattern').val(settings.autoDetectPattern || '');
 
     // Sync selective retrieval
     $('#tv_selective_retrieval').prop('checked', settings.selectiveRetrieval === true);
@@ -2060,7 +2070,16 @@ async function onRunDiagnostics() {
         for (const result of results) {
             const icon = result.status === 'pass' ? 'fa-check' : result.status === 'warn' ? 'fa-triangle-exclamation' : 'fa-xmark';
             const cssClass = `tv_diag_${result.status}`;
-            $output.append(`<div class="tv_diag_item ${cssClass}"><i class="fa-solid ${icon}"></i> ${escapeHtml(result.message)}</div>`);
+            const $item = $(`<div class="tv_diag_item ${cssClass}"><i class="fa-solid ${icon}"></i> ${escapeHtml(result.message)}</div>`);
+            if (result.fix && typeof result.fix === 'function') {
+                const $fixBtn = $(`<button class="tv-btn tv-btn-secondary" style="margin-left:8px;padding:2px 8px;font-size:0.85em;">${escapeHtml(result.fixLabel || 'Fix')}</button>`);
+                $fixBtn.on('click', () => {
+                    const msg = result.fix();
+                    $fixBtn.replaceWith(`<span style="margin-left:8px;color:var(--tv-accent,#4fc3f7);">✓ ${escapeHtml(msg)}</span>`);
+                });
+                $item.append($fixBtn);
+            }
+            $output.append($item);
         }
     } catch (e) {
         $output.append(`<div class="tv_diag_item tv_diag_fail"><i class="fa-solid fa-xmark"></i> Diagnostics error: ${escapeHtml(e.message)}</div>`);

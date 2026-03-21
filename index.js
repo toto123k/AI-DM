@@ -18,11 +18,11 @@
  *   auto-summary.js — Automatic summary injection every N messages.
  */
 
-import { eventSource, event_types, extension_prompt_types, extension_prompt_roles, setExtensionPrompt } from '../../../../script.js';
+import { eventSource, event_types, extension_prompt_types, extension_prompt_roles, setExtensionPrompt, saveSettingsDebounced } from '../../../../script.js';
 import { getContext } from '../../../st-context.js';
 import { ToolManager } from '../../../tool-calling.js';
 import { renderExtensionTemplateAsync } from '../../../extensions.js';
-import { getSettings, isLorebookEnabled } from './tree-store.js';
+import { getSettings, isLorebookEnabled, setLorebookEnabled } from './tree-store.js';
 import { preflightToolRuntimeState, registerTools } from './tool-registry.js';
 import { buildNotebookPrompt, resetNotebookWriteGuard } from './tools/notebook.js';
 import { bindUIEvents, refreshUI } from './ui-controller.js';
@@ -32,7 +32,7 @@ import { initAutoSummary } from './auto-summary.js';
 import { runSidecarRetrieval } from './sidecar-retrieval.js';
 import { runSidecarWriter } from './sidecar-writer.js';
 import { separateConditions, isEvaluableCondition, formatCondition, EVALUABLE_TYPES, CONDITION_LABELS, getKeywordProbability, setKeywordProbability } from './conditions.js';
-import { loadWorldInfo, saveWorldInfo } from '../../../world-info.js';
+import { loadWorldInfo, saveWorldInfo, world_names } from '../../../world-info.js';
 
 const EXTENSION_NAME = 'tunnelvision';
 const EXTENSION_FOLDER = `third-party/TunnelVision`;
@@ -163,8 +163,38 @@ async function init() {
 }
 
 async function onChatChanged() {
+    autoDetectLorebooks();
     refreshUI();
     await registerTools();
+}
+
+/**
+ * Auto-enable lorebooks whose names match the user-configured pattern.
+ * Supports {{char}} macro replacement with the current character name.
+ */
+function autoDetectLorebooks() {
+    const settings = getSettings();
+    const pattern = settings.autoDetectPattern;
+    if (!pattern || typeof pattern !== 'string' || !pattern.trim()) return;
+    if (!world_names || world_names.length === 0) return;
+
+    const context = getContext();
+    const charName = context?.name2 || '';
+    // Replace {{char}} macro
+    const resolved = pattern.replace(/\{\{char\}\}/gi, charName);
+    if (!resolved.trim()) return;
+
+    let autoEnabled = 0;
+    for (const bookName of world_names) {
+        if (bookName.includes(resolved) && !isLorebookEnabled(bookName)) {
+            setLorebookEnabled(bookName, true);
+            autoEnabled++;
+            console.log(`[TunnelVision] Auto-detected lorebook: "${bookName}" (pattern: "${resolved}")`);
+        }
+    }
+    if (autoEnabled > 0) {
+        saveSettingsDebounced();
+    }
 }
 
 async function onWorldInfoUpdated() {

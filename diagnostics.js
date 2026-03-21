@@ -15,6 +15,7 @@ import {
     findNodeById,
     getSettings,
     saveTree,
+    deleteTree,
     getBookDescription,
     isTrackerTitle,
 } from './tree-store.js';
@@ -688,7 +689,17 @@ function checkOrphanedTrees() {
     }
 
     if (orphaned.length > 0) {
-        return warn(`Found ${orphaned.length} tree(s) for non-existent lorebooks: ${orphaned.join(', ')}. These can be safely deleted.`);
+        return {
+            status: 'warn',
+            message: `Found ${orphaned.length} tree(s) for non-existent lorebooks: ${orphaned.join(', ')}. These can be safely deleted.`,
+            fix: () => {
+                for (const name of orphaned) {
+                    deleteTree(name);
+                }
+                return `Deleted ${orphaned.length} orphaned tree(s).`;
+            },
+            fixLabel: 'Delete Orphaned Trees',
+        };
     }
     return pass('No orphaned trees found');
 }
