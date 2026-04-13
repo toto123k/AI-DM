@@ -38,7 +38,7 @@ import { filterMessagesByPhase } from './prompt-filter.js';
 import { isDualPhaseEnabled } from './phase-store.js';
 
 const EXTENSION_NAME = 'tunnelvision';
-const EXTENSION_FOLDER = `third-party/AI-DM/TunnelVision`;
+const EXTENSION_FOLDER = `third-party/AI-DM`;
 
 // Guard: prevents tool re-registration when WORLDINFO_UPDATED fires during generation
 // (lorebook saves from tool actions trigger this event mid-generation).
