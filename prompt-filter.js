@@ -82,12 +82,12 @@ export function filterMessagesByPhase(data) {
     if (phase === 'planning') {
         data.messages.push({
             role: 'system',
-            content: "You are currently in the PLANNING PHASE. Your task is to analyze the narrative, outline character intentions, and lay out a clear plan for the response. You may use tools if you need more context. IMPORTANT: Do NOT write the actual character dialogue or prose yet. Focus entirely on the plan."
+            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. Always begin your output with your reasoning. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan."
         });
     } else if (phase === 'writing') {
         data.messages.push({
             role: 'system',
-            content: "You are currently in the WRITING PHASE. Using the plan and tool results from the previous phase, write the final character response. Ensure you follow all writing guidelines and persona rules. Do not output raw planning steps."
+            content: "You are currently in the WRITING PHASE. Using the plan and tool results from the previous phase, write the final character response. Ensure you follow all writing guidelines and persona rules. Do not include your raw planning steps in the final output."
         });
     }
 }
