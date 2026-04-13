@@ -36,6 +36,7 @@ import { loadWorldInfo, saveWorldInfo, world_names } from '../../../world-info.j
 import { startPhaseInjector } from './phase-injector.js';
 import { filterMessagesByPhase } from './prompt-filter.js';
 import { isDualPhaseEnabled } from './phase-store.js';
+import { ToolManager } from '../../../tool-calling.js';
 
 const EXTENSION_NAME = 'tunnelvision';
 const EXTENSION_FOLDER = `third-party/AI-DM`;
@@ -215,6 +216,38 @@ async function onWorldInfoUpdated() {
 
 async function onAppReady() {
     await registerTools();
+    registerDualPhaseTool();
+}
+
+/**
+ * Registers a mandatory tool that the LLM must call to signify the end of its planning phase.
+ * This guarantees ST will natively execute a second "Writing" pass.
+ */
+function registerDualPhaseTool() {
+    try {
+        ToolManager.registerFunctionTool({
+            name: 'DualPhase_SubmitPlan',
+            displayName: 'Submit DualPhase Plan',
+            description: 'You MUST call this tool when you have finished planning your response. This ends the planning phase and advances the pipeline to the writing phase.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    status: {
+                        type: 'string',
+                        description: 'Always pass "ready"'
+                    }
+                },
+                required: ['status']
+            },
+            action: async () => 'Plan accepted. ST Tool Manager will now proceed to the WRITING phase.',
+            formatMessage: async () => 'Transitioning to Writing phase...',
+            shouldRegister: async () => isDualPhaseEnabled(),
+            stealth: true // Hide the tool call popup from the UI, but ST still processes the recursion
+        });
+        console.log('[DualPhase] Submit tool registered natively');
+    } catch (e) {
+        console.error('[DualPhase] Failed to register submit tool:', e);
+    }
 }
 
 // ─── WI Editor Condition Injector ────────────────────────────────

@@ -82,7 +82,7 @@ export function filterMessagesByPhase(data) {
     if (phase === 'planning') {
         data.messages.push({
             role: 'system',
-            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. Always begin your output with your reasoning. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan."
+            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. Always begin your output with an explicit reasoning block. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan.\n\nCRITICAL MUST DO: When your plan is perfectly compiled, you MUST call the `DualPhase_SubmitPlan` tool. This is mandatory to advance the workflow."
         });
     } else if (phase === 'writing') {
         data.messages.push({
