@@ -43,6 +43,9 @@ import { refreshHiddenToolCallMessages } from './activity-feed.js';
 import { separateConditions, isEvaluableCondition, formatCondition, EVALUABLE_TYPES, CONDITION_LABELS, getKeywordProbability, setKeywordProbability } from './conditions.js';
 import { callGenericPopup, POPUP_TYPE } from '../../../popup.js';
 
+import { isDualPhaseEnabled, setDualPhaseEnabled, resetAllPhases } from './phase-store.js';
+import { refreshBadges } from './phase-injector.js';
+
 
 let currentLorebook = null;
 
@@ -80,6 +83,17 @@ export function bindUIEvents() {
         settings.conditionalTriggersEnabled = $(this).prop('checked');
         $('#tv_conditional_triggers').prop('checked', settings.conditionalTriggersEnabled);
         saveSettingsDebounced();
+    });
+
+    // DualPhase Control
+    $('#dp_enabled').on('change', function () {
+        setDualPhaseEnabled($(this).prop('checked'));
+        refreshUI();
+    });
+    $('#dp_reset_all').on('click', function () {
+        resetAllPhases();
+        refreshBadges();
+        toastr?.success('All prompt node phases reset to Both');
     });
     $('#tv_lorebook_select').on('change', onLorebookSelect);
     $('#tv_lorebook_enabled').on('change', onLorebookToggle);
@@ -227,6 +241,15 @@ export function refreshUI() {
     $('#tv_main_controls').toggle(globalEnabled);
     $('#tv_conditional_master_row').toggle(globalEnabled);
     $('#tv_conditional_triggers_master').prop('checked', settings.conditionalTriggersEnabled !== false);
+
+    // DualPhase sync
+    const dpEnabled = isDualPhaseEnabled();
+    $('#dp_enabled').prop('checked', dpEnabled);
+    if (dpEnabled) {
+        $('#dp_options').slideDown(200);
+    } else {
+        $('#dp_options').slideUp(200);
+    }
 
     // Sync tool toggles from settings
     const disabledTools = settings.disabledTools || {};

@@ -33,6 +33,9 @@ import { runSidecarRetrieval } from './sidecar-retrieval.js';
 import { runSidecarWriter } from './sidecar-writer.js';
 import { separateConditions, isEvaluableCondition, formatCondition, EVALUABLE_TYPES, CONDITION_LABELS, getKeywordProbability, setKeywordProbability } from './conditions.js';
 import { loadWorldInfo, saveWorldInfo, world_names } from '../../../world-info.js';
+import { startPhaseInjector } from './phase-injector.js';
+import { filterMessagesByPhase } from './prompt-filter.js';
+import { isDualPhaseEnabled } from './phase-store.js';
 
 const EXTENSION_NAME = 'tunnelvision';
 const EXTENSION_FOLDER = `third-party/TunnelVision`;
@@ -74,6 +77,9 @@ async function init() {
 
     // Inject condition editor into ST's base lorebook editor
     initWIConditionInjector();
+
+    // Start DualPhase badge injector (polls for Prompt Manager rows)
+    startPhaseInjector();
 
     // Load initial state
     refreshUI();
@@ -813,6 +819,10 @@ function onChatCompletionSettingsReady(data) {
         }
         console.log(`[TunnelVision] Final recursion pass (depth=${_toolRecursionDepth}, limit=${recurseLimit}) — stripped tools to force narrative output`);
     }
+
+    // ── DualPhase prompt filtering ────────────────────────────────────
+    // Filter messages based on phase assignments (planning vs writing)
+    filterMessagesByPhase(data);
 }
 
 /**

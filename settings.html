@@ -36,6 +36,25 @@
 
             <div id="tv_main_controls" style="display:none;">
 
+                <!-- DualPhase: Mixture of Experts -->
+                <div class="tv-setting-row" style="background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(34,197,94,0.06) 100%); border: 1px solid rgba(59,130,246,0.2);">
+                    <label class="tv-toggle">
+                        <input id="dp_enabled" type="checkbox" />
+                        <span class="tv-toggle-slider" style="--checked-bg: linear-gradient(135deg, #3b82f6 0%, #22c55e 100%);"></span>
+                        <span class="tv-toggle-label">🧠 DualPhase — Mixture of Experts</span>
+                    </label>
+                    <div class="tv-help-text">
+                        Split preset prompts into <strong style="color:#3b82f6;">Planning</strong> and <strong style="color:#22c55e;">Writing</strong> phases.
+                        Tag each Prompt Manager node with 🧠P / ✍️W / 🔄B badges.
+                        Planning-only nodes are stripped during the writing pass (tool recursion), and vice versa.
+                    </div>
+                    <div id="dp_options" style="display: none; margin-top: 8px; padding: 8px; background: rgba(0,0,0,0.1); border-radius: 6px;">
+                        <button id="dp_reset_all" class="tv-btn tv-btn-secondary" style="width: 100%;">
+                            <i class="fa-solid fa-rotate-left"></i> Reset All Phases to Both
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Lorebook Selection Section -->
                 <div class="tv-card">
                     <div class="tv-card-header">

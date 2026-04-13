@@ -2748,3 +2748,49 @@
 .tv-tool-prompt-textarea { width: 100%; min-height: 80px; resize: vertical; font-family: monospace; font-size: 11px; background: rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 8px; color: inherit; line-height: 1.4; }
 .tv-tool-prompt-textarea:focus { border-color: rgba(255,255,255,0.25); outline: none; }
 .tv-tool-prompt-modified { border-left: 3px solid var(--SmartThemeQuoteColor, #e8a66d); }
+
+/* ===== DualPhase — Phase Badges ===== */
+.dp-phase-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    letter-spacing: 0.3px;
+    transition: all 0.2s ease;
+    background: color-mix(in srgb, var(--dp-badge-color, #d97706) 20%, transparent);
+    color: var(--dp-badge-color, #d97706);
+    border: 1px solid color-mix(in srgb, var(--dp-badge-color, #d97706) 40%, transparent);
+    flex-shrink: 0;
+    margin-right: 2px;
+    line-height: 1;
+}
+
+.dp-phase-badge:hover {
+    background: color-mix(in srgb, var(--dp-badge-color, #d97706) 35%, transparent);
+    border-color: var(--dp-badge-color, #d97706);
+    transform: scale(1.08);
+}
+
+.dp-phase-badge:active {
+    transform: scale(0.95);
+}
+
+/* Phase-specific colors */
+.dp-phase-badge[data-dp-phase="planning"] {
+    --dp-badge-color: #3b82f6;
+}
+
+.dp-phase-badge[data-dp-phase="writing"] {
+    --dp-badge-color: #22c55e;
+}
+
+.dp-phase-badge[data-dp-phase="both"] {
+    --dp-badge-color: #d97706;
+}
