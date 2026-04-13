@@ -77,4 +77,17 @@ export function filterMessagesByPhase(data) {
     if (removed > 0) {
         console.log(`[DualPhase] ${phase} pass: kept ${kept} identified messages, removed ${removed}`);
     }
+
+    // Inject phase-specific guiding instructions
+    if (phase === 'planning') {
+        data.messages.push({
+            role: 'system',
+            content: "You are currently in the PLANNING PHASE. Your task is to analyze the narrative, outline character intentions, and lay out a clear plan for the response. You may use tools if you need more context. IMPORTANT: Do NOT write the actual character dialogue or prose yet. Focus entirely on the plan."
+        });
+    } else if (phase === 'writing') {
+        data.messages.push({
+            role: 'system',
+            content: "You are currently in the WRITING PHASE. Using the plan and tool results from the previous phase, write the final character response. Ensure you follow all writing guidelines and persona rules. Do not output raw planning steps."
+        });
+    }
 }
