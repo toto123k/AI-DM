@@ -3,7 +3,7 @@
  * Injects clickable phase badges (🧠P / ✍️W / 🔄B) into each Prompt Manager row.
  *
  * Uses a polling interval (like TunnelVision's WI condition injector) to detect
- * when the Prompt Manager UI is open and inject badges into `.prompt_manager_prompt`
+ * when the Prompt Manager UI is open and inject badges into `.completion_prompt_manager_prompt`
  * elements that have a `data-pm-identifier` attribute.
  */
 
@@ -59,12 +59,12 @@ function updateBadgeDisplay(badge, identifier) {
 
 /**
  * Scan the Prompt Manager for rows that need badges.
- * Injects a badge into each `.prompt_manager_prompt` that doesn't already have one.
+ * Injects a badge into each `.completion_prompt_manager_prompt` that doesn't already have one.
  */
 function injectBadges() {
     if (!isDualPhaseEnabled()) return;
 
-    const promptRows = document.querySelectorAll('.prompt_manager_prompt[data-pm-identifier]');
+    const promptRows = document.querySelectorAll('.completion_prompt_manager_prompt[data-pm-identifier]');
     if (promptRows.length === 0) return;
 
     for (const row of promptRows) {
