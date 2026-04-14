@@ -241,7 +241,7 @@ function registerDualPhaseTool() {
             action: async () => 'Plan accepted. ST Tool Manager will now proceed to the WRITING phase.',
             formatMessage: async () => 'Transitioning to Writing phase...',
             shouldRegister: async () => isDualPhaseEnabled(),
-            stealth: true // Hide the tool call popup from the UI, but ST still processes the recursion
+            stealth: false // MUST be false — stealth:true prevents ST from triggering follow-up generation
         });
         console.log('[DualPhase] Submit tool registered natively');
     } catch (e) {
