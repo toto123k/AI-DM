@@ -43,12 +43,6 @@ export function filterMessagesByPhase(data) {
     if (!isDualPhaseEnabled()) return;
     if (!data?.messages || !Array.isArray(data.messages)) return;
 
-    // Suppress OpenRouter reasoning chunks (like Gemini 2.5 Pro's encrypted reasoning)
-    // to prevent SillyTavern's SSE parser from crashing and dumping raw JSON into chat.
-    if (data.include_reasoning === undefined) {
-        data.include_reasoning = false;
-    }
-
     const phase = getCurrentPhase();
     let removed = 0;
     let kept = 0;
@@ -84,21 +78,30 @@ export function filterMessagesByPhase(data) {
         console.log(`[DualPhase] ${phase} pass: kept ${kept} identified messages, removed ${removed}`);
     }
 
-    // Inject phase-specific guiding instructions
+    // ── Phase-specific tool & prompt handling ─────────────────────────
     if (phase === 'planning') {
+        // PLANNING PHASE: TV tools stay available so the model can search lorebooks.
+        // Inject a system prompt telling the model to reason/plan + make tool calls.
         data.messages.push({
             role: 'system',
-            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan.\n\nCRITICAL: You MUST wrap your entire text plan and reasoning inside <think> and </think> tags to ensure it is correctly hidden from the final chat display. After the closing </think> tag, you MUST call the `DualPhase_SubmitPlan` tool to advance to the writing phase."
+            content: "You are in the PLANNING phase. Your job is to reason about what the character should do, search relevant lorebook entries using your available tools, and outline the key beats of your response. Do NOT write the final prose yet — only plan and search. Your tool calls will trigger the writing phase automatically."
         });
+        console.log(`[DualPhase] Planning pass: ${Array.isArray(data.tools) ? data.tools.length : 0} tools available`);
 
-        // We rely entirely on the system prompt to instruct the LLM to call the submit tool.
-        // Forcing tool_choice = { function: ... } crashes the SSE parser on some OpenRouter
-        // backends (like Gemini 2.5) because they stream unhandled reasoning/delta chunks
-        // when forced into tool mode.
     } else if (phase === 'writing') {
+        // WRITING PHASE: Strip ALL tools so the model MUST write prose.
+        // This is the key mechanism — no tools = no tool calls = pure narrative output.
+        if (data.tools) {
+            console.log(`[DualPhase] Writing pass: stripping ${data.tools.length} tools to force narrative output`);
+            delete data.tools;
+        }
+        if (data.tool_choice) {
+            delete data.tool_choice;
+        }
+
         data.messages.push({
             role: 'system',
-            content: "You are currently in the WRITING PHASE. Using the plan and tool results from the previous phase, write the final character response. Ensure you follow all writing guidelines and persona rules. Do not include your raw planning steps in the final output."
+            content: "You are in the WRITING phase. The planning and lorebook search is complete — the results are in your context above. Now write the final in-character response using all available information. Follow all writing guidelines, persona rules, and character voice. Do not output any planning, reasoning, or tool calls."
         });
     }
 }
