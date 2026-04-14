@@ -82,8 +82,14 @@ export function filterMessagesByPhase(data) {
     if (phase === 'planning') {
         data.messages.push({
             role: 'system',
-            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. Always begin your output with an explicit reasoning block. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan.\n\nCRITICAL MUST DO: When your plan is perfectly compiled, you MUST call the `DualPhase_SubmitPlan` tool. This is mandatory to advance the workflow."
+            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. Always begin your output with an explicit reasoning block. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan.\n\nAfter your plan, you MUST call the `DualPhase_SubmitPlan` tool to advance to the writing phase."
         });
+
+        // Force the model to call our SubmitPlan tool — this is what triggers
+        // ST's tool recursion into pass 2 (writing). Without this, the model
+        // outputs text-only and generation ends after one pass.
+        data.tool_choice = { type: 'function', function: { name: 'DualPhase_SubmitPlan' } };
+        console.log('[DualPhase] Planning pass: forced tool_choice to DualPhase_SubmitPlan');
     } else if (phase === 'writing') {
         data.messages.push({
             role: 'system',
