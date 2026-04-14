@@ -85,11 +85,10 @@ export function filterMessagesByPhase(data) {
             content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. Always begin your output with an explicit reasoning block. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan.\n\nAfter your plan, you MUST call the `DualPhase_SubmitPlan` tool to advance to the writing phase."
         });
 
-        // Force the model to call our SubmitPlan tool — this is what triggers
-        // ST's tool recursion into pass 2 (writing). Without this, the model
-        // outputs text-only and generation ends after one pass.
-        data.tool_choice = { type: 'function', function: { name: 'DualPhase_SubmitPlan' } };
-        console.log('[DualPhase] Planning pass: forced tool_choice to DualPhase_SubmitPlan');
+        // We rely entirely on the system prompt to instruct the LLM to call the submit tool.
+        // Forcing tool_choice = { function: ... } crashes the SSE parser on some OpenRouter
+        // backends (like Gemini 2.5) because they stream unhandled reasoning/delta chunks
+        // when forced into tool mode.
     } else if (phase === 'writing') {
         data.messages.push({
             role: 'system',
