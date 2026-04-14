@@ -43,6 +43,12 @@ export function filterMessagesByPhase(data) {
     if (!isDualPhaseEnabled()) return;
     if (!data?.messages || !Array.isArray(data.messages)) return;
 
+    // Suppress OpenRouter reasoning chunks (like Gemini 2.5 Pro's encrypted reasoning)
+    // to prevent SillyTavern's SSE parser from crashing and dumping raw JSON into chat.
+    if (data.include_reasoning === undefined) {
+        data.include_reasoning = false;
+    }
+
     const phase = getCurrentPhase();
     let removed = 0;
     let kept = 0;
