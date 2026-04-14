@@ -88,7 +88,7 @@ export function filterMessagesByPhase(data) {
     if (phase === 'planning') {
         data.messages.push({
             role: 'system',
-            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. Always begin your output with an explicit reasoning block. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan.\n\nAfter your plan, you MUST call the `DualPhase_SubmitPlan` tool to advance to the writing phase."
+            content: "You are currently in the PLANNING PHASE. You MUST output a detailed text outline and reasoning for your response BEFORE making any tool calls. DO NOT write the actual character dialogue or prose yet. Focus entirely on the plan.\n\nCRITICAL: You MUST wrap your entire text plan and reasoning inside <think> and </think> tags to ensure it is correctly hidden from the final chat display. After the closing </think> tag, you MUST call the `DualPhase_SubmitPlan` tool to advance to the writing phase."
         });
 
         // We rely entirely on the system prompt to instruct the LLM to call the submit tool.
