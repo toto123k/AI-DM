@@ -36,7 +36,6 @@ import { loadWorldInfo, saveWorldInfo, world_names } from '../../../world-info.j
 import { startPhaseInjector } from './phase-injector.js';
 import { filterMessagesByPhase } from './prompt-filter.js';
 import { isDualPhaseEnabled } from './phase-store.js';
-import { ToolManager } from '../../../tool-calling.js';
 
 const EXTENSION_NAME = 'tunnelvision';
 const EXTENSION_FOLDER = `third-party/AI-DM`;
